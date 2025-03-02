@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model commodity {
+  name              String              @id @db.VarChar(50)
+  farmer_attendance farmer_attendance[]
+  harvest           harvest[]
+  material_usage    material_usage[]
+  proposal          proposal[]
+  purchasing        purchasing[]
+  sales             sales[]
+}
+
+model farm_activity {
+  name                 String              @id @db.VarChar(50)
+  activity_description String?
+  farmer_attendance    farmer_attendance[]
+  material_usage       material_usage[]
+  purchasing           purchasing[]
+  wages                wages[]
+}
+
+model farmer {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(255)
+  address           String?
+  phone_number      String?             @db.VarChar(20)
+  farmer_attendance farmer_attendance[]
+  harvest           harvest[]
+  material_usage    material_usage[]
+  purchasing        purchasing[]
+}
+
+model farmer_attendance {
+  id            Int            @id @default(autoincrement())
+  created_date  DateTime?      @default(now()) @db.Timestamp(6)
+  farmer_id     Int?
+  field_id      Int?
+  proposal_id   String?        @db.Uuid
+  activity_id   String?        @db.VarChar(50)
+  commodity_id  String?        @db.VarChar(50)
+  working_date  DateTime?      @db.Date
+  start_time    DateTime?      @db.Time(6)
+  end_time      DateTime?      @db.Time(6)
+  farm_activity farm_activity? @relation(fields: [activity_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+  commodity     commodity?     @relation(fields: [commodity_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+  farmer        farmer?        @relation(fields: [farmer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fields        fields?        @relation(fields: [field_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  proposal      proposal?      @relation(fields: [proposal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model fields {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(255)
+  area              Decimal             @db.Decimal(10, 2)
+  farmer_attendance farmer_attendance[]
+  harvest           harvest[]
+  material_usage    material_usage[]
+  proposal          proposal[]
+  purchasing        purchasing[]
+}
+
+model harvest {
+  id            Int        @id @default(autoincrement())
+  created_date  DateTime?  @default(now()) @db.Timestamp(6)
+  harvest_date  DateTime?  @db.Timestamp(6)
+  proposal_id   String?    @db.Uuid
+  commodity_id  String?    @db.VarChar(50)
+  field_id      Int?
+  farmer_id     Int?
+  gross_harvest Decimal?   @db.Decimal(10, 2)
+  net_harvest   Decimal?   @db.Decimal(10, 2)
+  commodity     commodity? @relation(fields: [commodity_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+  farmer        farmer?    @relation(fields: [farmer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fields        fields?    @relation(fields: [field_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  proposal      proposal?  @relation(fields: [proposal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model master_uom {
+  name           String           @id @db.VarChar(50)
+  material       material[]
+  material_usage material_usage[]
+  purchasing     purchasing[]
+}
+
+model material {
+  id                Int                @id @default(autoincrement())
+  name              String             @db.VarChar(255)
+  uom_id            String?            @db.VarChar(50)
+  category_id       String?            @db.VarChar(50)
+  material_category material_category? @relation(fields: [category_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+  master_uom        master_uom?        @relation(fields: [uom_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+  material_usage    material_usage[]
+  purchasing        purchasing[]
+}
+
+model material_category {
+  name     String     @id @db.VarChar(50)
+  material material[]
+}
+
+model material_usage {
+  id            Int            @id @default(autoincrement())
+  usage_date    DateTime?      @default(now()) @db.Timestamp(6)
+  field_id      Int?
+  proposal_id   String?        @db.Uuid
+  commodity_id  String?        @db.VarChar(50)
+  farmer_id     Int?
+  activity_id   String?        @db.VarChar(50)
+  material_id   Int?
+  quantity      Decimal        @db.Decimal(10, 2)
+  uom_id        String?        @db.VarChar(50)
+  farm_activity farm_activity? @relation(fields: [activity_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+  commodity     commodity?     @relation(fields: [commodity_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+  farmer        farmer?        @relation(fields: [farmer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fields        fields?        @relation(fields: [field_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  material      material?      @relation(fields: [material_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  proposal      proposal?      @relation(fields: [proposal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  master_uom    master_uom?    @relation(fields: [uom_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model process {
+  name String @id @db.VarChar(50)
+}
+
+model proposal {
+  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String              @db.VarChar(255)
+  created_date            DateTime?           @default(now()) @db.Timestamp(6)
+  commodity_id            String?             @db.VarChar(50)
+  field_id                Int?
+  planting_distance       Int?
+  population              Int?
+  harvest_weight_per_tree Int?
+  planting_plan_date      DateTime?           @db.Timestamp(6)
+  harvest_plan_date       DateTime?           @db.Timestamp(6)
+  farmer_attendance       farmer_attendance[]
+  harvest                 harvest[]
+  material_usage          material_usage[]
+  commodity               commodity?          @relation(fields: [commodity_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+  fields                  fields?             @relation(fields: [field_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  purchasing              purchasing[]
+  sales                   sales[]
+}
+
+model purchasing {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  purchased_date DateTime?      @default(now()) @db.Timestamp(6)
+  field_id       Int?
+  proposal_id    String?        @db.Uuid
+  commodity_id   String?        @db.VarChar(50)
+  farmer_id      Int?
+  activity_id    String?        @db.VarChar(50)
+  material_id    Int?
+  quantity       Decimal        @db.Decimal(10, 2)
+  uom_id         String?        @db.VarChar(50)
+  amount         Decimal        @db.Decimal(10, 2)
+  farm_activity  farm_activity? @relation(fields: [activity_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+  commodity      commodity?     @relation(fields: [commodity_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+  farmer         farmer?        @relation(fields: [farmer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fields         fields?        @relation(fields: [field_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  material       material?      @relation(fields: [material_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  proposal       proposal?      @relation(fields: [proposal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  master_uom     master_uom?    @relation(fields: [uom_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model role {
+  name String @id @db.VarChar(50)
+}
+
+model sales {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_date DateTime?  @default(now()) @db.Timestamp(6)
+  sales_date   DateTime?  @db.Timestamp(6)
+  commodity_id String?    @db.VarChar(50)
+  proposal_id  String?    @db.Uuid
+  qty          Decimal    @db.Decimal(10, 2)
+  price        Decimal    @db.Decimal(10, 2)
+  commodity    commodity? @relation(fields: [commodity_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+  proposal     proposal?  @relation(fields: [proposal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username      String  @unique @db.VarChar(255)
+  password_hash String  @db.VarChar(255)
+  role_id       String? @db.VarChar(50)
+}
+
+model wages {
+  id            Int            @id @default(autoincrement())
+  activity_id   String?        @db.VarChar(50)
+  amount        Decimal        @db.Decimal(10, 2)
+  farm_activity farm_activity? @relation(fields: [activity_id], references: [name], onDelete: NoAction, onUpdate: NoAction)
+}
