@@ -8,7 +8,7 @@ export const createRole = async (req, res) => {
     const role = await prisma.role.create({
       data: { name },
     });
-    res.status(201).json(role);
+    res.status(201).json({ role });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -18,29 +18,28 @@ export const createRole = async (req, res) => {
 export const getAllRoles = async (req, res) => {
   try {
     const roles = await prisma.role.findMany();
-    res.status(201).json(roles);
+    res.status(201).json({ roles });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 //Get role by ID
-export const getRoleById = async (res, req) => {
+export const getRoleById = async (req, res) => {
   try {
-    const name = req.params;
+    const { name } = req.params;
     const role = await prisma.role.findUnique({
-      where: { name: name },
+      where: { name },
     });
     if (!role) {
       return res.status(404).json({ message: "Role not found" });
     }
-    res.status(200).json(role);
+    res.status(200).json({ role });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-//Update a role
 // Update a role by name
 export const updateRole = async (req, res) => {
   try {
@@ -61,7 +60,7 @@ export const updateRole = async (req, res) => {
     });
 
     // Kirim respons ke client
-    res.status(200).json(updatedRole);
+    res.status(200).json({ updatedRole });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
